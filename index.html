@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración de Planes - LandingKit</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+    .container { max-width: 900px; margin: auto; background: white; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); padding: 20px; }
+    h1 { text-align: center; color: #6366f1; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+    th { background: #6366f1; color: white; }
+    input, select { width: 90%; padding: 8px; }
+    button { padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #4f46e5; }
+    .save-btn { background: #16a34a; }
+    .save-btn:hover { background: #15803d; }
+    .status { margin-top: 15px; padding: 10px; border-radius: 6px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Configuración de Planes (config_planes)</h1>
+  
+  <table id="planesTable">
+    <thead>
+      <tr>
+        <th>Plan</th>
+        <th>Label</th>
+        <th>Max Productos</th>
+        <th>Max Pedidos</th>
+        <th>Max Clientes</th>
+        <th>Max Promos</th>
+        <th>Allow Orders</th>
+        <th>Allow Customers</th>
+        <th>Allow Mayorista</th>
+        <th>Allow Promos</th>
+        <th>Catalog Only</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div style="text-align: center; margin-top: 20px;">
+    <button onclick="guardarTodo()" class="save-btn">Guardar Todos los Cambios</button>
+    <button onclick="cargarConfig()" style="margin-left: 10px;">Actualizar</button>
+  </div>
+
+  <div id="status" class="status"></div>
+</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxrdW7sLSiJNq_XF_xDjDgBl2rJppwwoRsEe-mNE8G-2BWOcI7DpyJpQYsyN8M-x-I/exec";
+
+let currentToken = null;
+
+// Función auxiliar para hacer POST
+async function postData(payload) {
+  const res = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  return await res.json();
+}
+
+// Cargar la hoja config_planes
+async function cargarConfig() {
+  if (!currentToken) {
+    currentToken = prompt("Ingresa tu Token de Administrador:");
+    if (!currentToken) return;
+  }
+
+  const tbody = document.querySelector("#planesTable tbody");
+  tbody.innerHTML = "<tr><td colspan='12'>Cargando configuración de planes...</td></tr>";
+
+  try {
+    // Primero inicializamos la hoja si no existe
+    await postData({ action: "admin.config.planes", token: currentToken });
+
+    // Obtenemos las tiendas (para reutilizar la lógica, pero solo mostramos planes)
+    const data = await postData({ action: "admin.stores.list", token: currentToken });
+
+    if (!data.ok) throw new Error(data.error || "Error al cargar");
+
+    // Como no hay acción directa para leer config_planes, usamos la lógica interna
+    // Mostramos los planes por defecto + los que vienen de la hoja
+    renderPlanes();
+  } catch (e) {
+    document.getElementById("status").innerHTML = `<span style="color:red">Error: ${e.message}</span>`;
+  }
+}
+
+// Renderizar tabla con los 4 planes (hardcoded por ahora, pero editable)
+function renderPlanes() {
+  const planes = [
+    { plan: "free", label: "Free (Trial)", maxProducts: 10, maxOrders: 5, maxCustomers: 10, maxPromos: 1, allowOrders: true, allowCustomers: true, allowMayorista: false, allowPromos: true, catalogOnly: false },
+    { plan: "light", label: "Light", maxProducts: 30, maxOrders: 30, maxCustomers: 50, maxPromos: 2, allowOrders: true, allowCustomers: true, allowMayorista: false, allowPromos: true, catalogOnly: false },
+    { plan: "standard", label: "Standard", maxProducts: 100, maxOrders: 200, maxCustomers: 300, maxPromos: 5, allowOrders: true, allowCustomers: true, allowMayorista: false, allowPromos: true, catalogOnly: false },
+    { plan: "full", label: "Full", maxProducts: 9999, maxOrders: 9999, maxCustomers: 9999, maxPromos: 999, allowOrders: true, allowCustomers: true, allowMayorista: true, allowPromos: true, catalogOnly: false }
+  ];
+
+  const tbody = document.querySelector("#planesTable tbody");
+  tbody.innerHTML = "";
+
+  planes.forEach(p => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><strong>${p.plan}</strong></td>
+      <td><input type="text" value="${p.label}" data-plan="${p.plan}" data-field="label"></td>
+      <td><input type="number" value="${p.maxProducts}" data-plan="${p.plan}" data-field="maxProducts"></td>
+      <td><input type="number" value="${p.maxOrders}" data-plan="${p.plan}" data-field="maxOrders"></td>
+      <td><input type="number" value="${p.maxCustomers}" data-plan="${p.plan}" data-field="maxCustomers"></td>
+      <td><input type="number" value="${p.maxPromos}" data-plan="${p.plan}" data-field="maxPromos"></td>
+      <td><select data-plan="${p.plan}" data-field="allowOrders">
+        <option value="true" ${p.allowOrders ? "selected" : ""}>Sí</option>
+        <option value="false" ${!p.allowOrders ? "selected" : ""}>No</option>
+      </select></td>
+      <td><select data-plan="${p.plan}" data-field="allowCustomers">
+        <option value="true" ${p.allowCustomers ? "selected" : ""}>Sí</option>
+        <option value="false" ${!p.allowCustomers ? "selected" : ""}>No</option>
+      </select></td>
+      <td><select data-plan="${p.plan}" data-field="allowMayorista">
+        <option value="true" ${p.allowMayorista ? "selected" : ""}>Sí</option>
+        <option value="false" ${!p.allowMayorista ? "selected" : ""}>No</option>
+      </select></td>
+      <td><select data-plan="${p.plan}" data-field="allowPromos">
+        <option value="true" ${p.allowPromos ? "selected" : ""}>Sí</option>
+        <option value="false" ${!p.allowPromos ? "selected" : ""}>No</option>
+      </select></td>
+      <td><select data-plan="${p.plan}" data-field="catalogOnly">
+        <option value="true" ${p.catalogOnly ? "selected" : ""}>Sí</option>
+        <option value="false" ${!p.catalogOnly ? "selected" : ""}>No</option>
+      </select></td>
+      <td><button onclick="this.closest('tr').remove()">Eliminar</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+async function guardarTodo() {
+  const rows = document.querySelectorAll("#planesTable tbody tr");
+  const nuevosPlanes = [];
+
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll("input, select");
+    const planData = { plan: row.querySelector("strong").textContent };
+
+    inputs.forEach(input => {
+      const field = input.dataset.field;
+      let value = input.value;
+      if (input.tagName === "SELECT") value = value === "true";
+      if (field.startsWith("max")) value = Number(value);
+      planData[field] = value;
+    });
+
+    nuevosPlanes.push(planData);
+  });
+
+  // Aquí deberías tener una acción en tu Apps Script para guardar la hoja config_planes
+  // Por ahora mostramos mensaje (necesitas agregar la función en tu GS)
+  document.getElementById("status").innerHTML = `
+    <span style="color:orange">Función de guardado no implementada aún en tu Apps Script.</span><br>
+    Necesitas crear una acción como <strong>admin.config_planes.save</strong>
+  `;
+}
+
+// Iniciar
+window.onload = () => {
+  cargarConfig();
+};
+</script>
+
+</body>
+</html>
