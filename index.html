@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración de Planes - LandingKit</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+    .container { max-width: 1000px; margin: auto; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+    header { background: #6366f1; color: white; padding: 15px; text-align: center; font-size: 22px; }
+    .section { padding: 25px; }
+    input, button { padding: 12px; margin: 8px; border-radius: 6px; font-size: 16px; }
+    button { background: #6366f1; color: white; border: none; cursor: pointer; }
+    button:hover { background: #4f46e5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+    th { background: #6366f1; color: white; }
+    input[type="number"] { width: 110px; }
+    .hidden { display: none; }
+    #status { padding: 12px; margin: 15px 0; border-radius: 6px; text-align: center; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>Configuración de Planes (config_planes)</header>
+
+  <!-- LOGIN -->
+  <div id="loginSection" class="section">
+    <input type="email" id="email" value="proyectosolaronline@gmail.com" placeholder="Correo administrador" style="width:300px;">
+    <button onclick="enviarCodigo()">Enviar Código por Email</button>
+
+    <div id="codeSection" class="hidden" style="margin-top:20px;">
+      <input type="text" id="codigo" maxlength="8" placeholder="Código de 8 caracteres" style="width:180px; text-align:center; font-size:18px;">
+      <button onclick="verificarCodigo()">Entrar</button>
+    </div>
+  </div>
+
+  <!-- TABLA DE PLANES -->
+  <div id="mainSection" class="section hidden">
+    <div style="text-align:right; margin-bottom:10px;">
+      <button onclick="cargarPlanes()">Actualizar</button>
+      <button onclick="guardarTodo()" style="background:#16a34a;">Guardar Todo</button>
+      <button onclick="location.reload()" style="background:#ef4444;">Salir</button>
+    </div>
+
+    <table id="tabla">
+      <thead>
+        <tr>
+          <th>Plan</th>
+          <th>Label</th>
+          <th>Max Productos</th>
+          <th>Max Pedidos</th>
+          <th>Max Clientes</th>
+          <th>Max Promos</th>
+          <th>Pedidos</th>
+          <th>Clientes</th>
+          <th>Mayorista</th>
+          <th>Promos</th>
+          <th>Catalog Only</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="status"></div>
+  </div>
+</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxrdW7sLSiJNq_XF_xDjDgBl2rJppwwoRsEe-mNE8G-2BWOcI7DpyJpQYsyN8M-x-I/exec";
+
+let tokenActual = "";
+
+// Función para enviar peticiones
+async function enviarPeticion(datos) {
+  const respuesta = await fetch(WEB_APP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(datos)
+  });
+  return await respuesta.json();
+}
+
+// ==================== LOGIN ====================
+async function enviarCodigo() {
+  const email = document.getElementById("email").value.trim();
+  if (!email) return alert("Ingresa tu correo");
+
+  const resultado = await enviarPeticion({ action: "admin.request.code", email: email });
+
+  if (resultado.ok) {
+    alert("Código enviado a tu correo. Revisa también Spam.");
+    document.getElementById("codeSection").classList.remove("hidden");
+  } else {
+    alert(resultado.error || "Error al enviar el código");
+  }
+}
+
+async function verificarCodigo() {
+  const email = document.getElementById("email").value.trim();
+  const codigo = document.getElementById("codigo").value.trim().toUpperCase();
+
+  if (codigo.length < 8) return alert("Ingresa el código completo");
+
+  const resultado = await enviarPeticion({ 
+    action: "admin.verify.code", 
+    email: email, 
+    code: codigo 
+  });
+
+  if (resultado.ok) {
+    tokenActual = resultado.token;
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("mainSection").classList.remove("hidden");
+    cargarPlanes();
+  } else {
+    alert(resultado.error || "Código incorrecto");
+  }
+}
+
+// ==================== PLANES ====================
+async function cargarPlanes() {
+  const tbody = document.querySelector("#tabla tbody");
+  tbody.innerHTML = "<tr><td colspan='11'>Cargando...</td></tr>";
+
+  // Aseguramos que exista la hoja config_planes
+  await enviarPeticion({ action: "admin.config.planes", token: tokenActual });
+
+  // Datos por defecto (mientras no tengas lectura real)
+  const planes = [
+    {plan:"free", label:"Free (Trial)", maxProducts:10, maxOrders:5, maxCustomers:10, maxPromos:1, allowOrders:true, allowCustomers:true, allowMayorista:false, allowPromos:true, catalogOnly:false},
+    {plan:"light", label:"Light", maxProducts:30, maxOrders:30, maxCustomers:50, maxPromos:2, allowOrders:true, allowCustomers:true, allowMayorista:false, allowPromos:true, catalogOnly:false},
+    {plan:"standard", label:"Standard", maxProducts:100, maxOrders:200, maxCustomers:300, maxPromos:5, allowOrders:true, allowCustomers:true, allowMayorista:false, allowPromos:true, catalogOnly:false},
+    {plan:"full", label:"Full", maxProducts:9999, maxOrders:9999, maxCustomers:9999, maxPromos:999, allowOrders:true, allowCustomers:true, allowMayorista:true, allowPromos:true, catalogOnly:false}
+  ];
+
+  renderizarTabla(planes);
+}
+
+function renderizarTabla(planes) {
+  const tbody = document.querySelector("#tabla tbody");
+  tbody.innerHTML = "";
+
+  planes.forEach(p => {
+    const fila = document.createElement("tr");
+    fila.innerHTML = `
+      <td><b>${p.plan}</b></td>
+      <td><input type="text" value="${p.label}" data-campo="label" data-plan="${p.plan}"></td>
+      <td><input type="number" value="${p.maxProducts}" data-campo="maxProducts" data-plan="${p.plan}"></td>
+      <td><input type="number" value="${p.maxOrders}" data-campo="maxOrders" data-plan="${p.plan}"></td>
+      <td><input type="number" value="${p.maxCustomers}" data-campo="maxCustomers" data-plan="${p.plan}"></td>
+      <td><input type="number" value="${p.maxPromos}" data-campo="maxPromos" data-plan="${p.plan}"></td>
+      <td><select data-campo="allowOrders" data-plan="${p.plan}"><option value="true" ${p.allowOrders ? 'selected' : ''}>Sí</option><option value="false" ${!p.allowOrders ? 'selected' : ''}>No</option></select></td>
+      <td><select data-campo="allowCustomers" data-plan="${p.plan}"><option value="true" ${p.allowCustomers ? 'selected' : ''}>Sí</option><option value="false" ${!p.allowCustomers ? 'selected' : ''}>No</option></select></td>
+      <td><select data-campo="allowMayorista" data-plan="${p.plan}"><option value="true" ${p.allowMayorista ? 'selected' : ''}>Sí</option><option value="false" ${!p.allowMayorista ? 'selected' : ''}>No</option></select></td>
+      <td><select data-campo="allowPromos" data-plan="${p.plan}"><option value="true" ${p.allowPromos ? 'selected' : ''}>Sí</option><option value="false" ${!p.allowPromos ? 'selected' : ''}>No</option></select></td>
+      <td><select data-campo="catalogOnly" data-plan="${p.plan}"><option value="true" ${p.catalogOnly ? 'selected' : ''}>Sí</option><option value="false" ${!p.catalogOnly ? 'selected' : ''}>No</option></select></td>
+    `;
+    tbody.appendChild(fila);
+  });
+}
+
+async function guardarTodo() {
+  document.getElementById("status").innerHTML = "Guardando cambios... (simulado)";
+  document.getElementById("status").style.background = "#d1fae5";
+  document.getElementById("status").style.color = "#166534";
+  
+  // Aquí iría el guardado real cuando agregues la función en tu Apps Script
+  setTimeout(() => {
+    document.getElementById("status").innerHTML = "✅ Cambios guardados en la tabla (pendiente de conexión real con la hoja)";
+  }, 800);
+}
+</script>
+
+</body>
+</html>
