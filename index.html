@@ -5,39 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LandingKit - Editor de Licencias</title>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f8fafc;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    header {
-      background: #6366f1;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
+    body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 20px; }
+    .container { max-width: 1100px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+    header { background: #6366f1; color: white; padding: 20px; text-align: center; }
     h1 { margin: 0; font-size: 24px; }
-    .controls {
-      padding: 20px;
-      background: #f1f5f9;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    .card { padding: 30px; text-align: center; }
     input, select, button {
-      padding: 10px 14px;
+      padding: 12px 16px;
+      margin: 8px;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 16px;
     }
     button {
       background: #6366f1;
@@ -45,94 +23,83 @@
       border: none;
       cursor: pointer;
       font-weight: 600;
+      padding: 12px 24px;
     }
     button:hover { background: #4f46e5; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 14px 12px;
-      text-align: left;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    th {
-      background: #f8fafc;
-      font-weight: 600;
-      color: #475569;
-    }
-    tr:hover { background: #f8fafc; }
+    .hidden { display: none; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f8fafc; }
     .status-active { color: #16a34a; font-weight: bold; }
     .status-suspended { color: #ef4444; font-weight: bold; }
     .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
-      align-items: center;
-      justify-content: center;
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7); align-items: center; justify-content: center;
     }
     .modal-content {
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 420px;
-    }
-    .form-group {
-      margin-bottom: 16px;
-    }
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 500;
+      background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 420px;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <h1>LandingKit – Editor de Licencias v3.4</h1>
-    <p>Gestión de planes y fechas de expiración</p>
-  </header>
+<div class="container" id="mainContainer">
 
-  <div class="controls">
-    <input type="text" id="search" placeholder="Buscar por nombre o email..." onkeyup="filterTable()">
-    <select id="planFilter" onchange="filterTable()">
-      <option value="">Todos los planes</option>
-      <option value="free">Free (Trial)</option>
-      <option value="light">Light</option>
-      <option value="standard">Standard</option>
-      <option value="full">Full</option>
-    </select>
-    <button onclick="loadStores()">Actualizar Lista</button>
+  <!-- Pantalla de Login -->
+  <div id="loginScreen" class="card">
+    <h1>🔑 Acceso Panel Maestro</h1>
+    <p>Editor de Licencias - LandingKit</p>
+    
+    <input type="email" id="adminEmail" placeholder="Correo del administrador" style="width:80%; max-width:320px;">
+    <br>
+    <button onclick="requestCode()">Enviar Código por Correo</button>
+    
+    <div id="codeSection" class="hidden" style="margin-top:20px;">
+      <input type="text" id="adminCode" placeholder="Código de 8 caracteres" maxlength="8" style="width:200px; text-align:center; font-size:18px; letter-spacing:4px;">
+      <br>
+      <button onclick="verifyCode()">Verificar Código</button>
+      <button onclick="backToLogin()" style="background:#64748b;">Cancelar</button>
+    </div>
   </div>
 
-  <table id="storesTable">
-    <thead>
-      <tr>
-        <th>Tienda</th>
-        <th>Dueño</th>
-        <th>Plan Actual</th>
-        <th>Expira</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <!-- Pantalla Principal (Tabla de Licencias) -->
+  <div id="mainScreen" class="hidden">
+    <header>
+      <h1>Editor de Licencias</h1>
+      <p id="adminInfo"></p>
+    </header>
+
+    <div style="padding:20px; background:#f1f5f9; display:flex; gap:10px; flex-wrap:wrap;">
+      <input type="text" id="search" placeholder="Buscar tienda o email..." onkeyup="filterTable()" style="flex:1; min-width:200px;">
+      <button onclick="loadStores()">Actualizar Lista</button>
+      <button onclick="logout()" style="background:#ef4444;">Cerrar Sesión</button>
+    </div>
+
+    <table id="storesTable">
+      <thead>
+        <tr>
+          <th>Tienda</th>
+          <th>Dueño</th>
+          <th>Plan</th>
+          <th>Expira</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
 
-<!-- Modal para editar licencia -->
+<!-- Modal Editar Licencia -->
 <div class="modal" id="editModal">
   <div class="modal-content">
     <h2>Editar Licencia</h2>
     <input type="hidden" id="editStoreId">
 
-    <div class="form-group">
-      <label>Plan</label>
-      <select id="editPlan">
+    <div style="margin:15px 0;">
+      <label>Plan:</label>
+      <select id="editPlan" style="width:100%;">
         <option value="free">Free (Trial)</option>
         <option value="light">Light</option>
         <option value="standard">Standard</option>
@@ -140,12 +107,12 @@
       </select>
     </div>
 
-    <div class="form-group">
-      <label>Fecha de Expiración</label>
-      <input type="date" id="editExpiry">
+    <div style="margin:15px 0;">
+      <label>Fecha de Expiración:</label>
+      <input type="date" id="editExpiry" style="width:100%;">
     </div>
 
-    <div style="display:flex; gap:10px; margin-top:20px;">
+    <div style="display:flex; gap:10px; margin-top:25px;">
       <button onclick="saveLicense()" style="flex:1; background:#16a34a;">Guardar Cambios</button>
       <button onclick="closeModal()" style="flex:1; background:#64748b;">Cancelar</button>
     </div>
@@ -153,39 +120,89 @@
 </div>
 
 <script>
-// ==================== CONFIGURA AQUÍ TU WEB APP URL ====================
-const WEB_APP_URL = 'https://script.google.com/macros/s/TU_DEPLOY_ID/exec'; 
-// Cambia esto por la URL de tu Web App desplegada como "Ejecutar como: Yo" y "Acceso: Cualquiera"
+const WEB_APP_URL = "https://script.google.com/macros/s/TU_WEB_APP_ID/exec"; 
+// ← Cambia esto por la URL real de tu Web App
 
-let currentToken = ''; // Pon aquí tu token de admin (puedes agregarlo manualmente o con un login)
+let currentToken = null;
+let currentAdminEmail = '';
 
-async function loadStores() {
-  if (!currentToken) {
-    alert("Falta el token de administrador. Edita el código y pon tu token.");
-    return;
-  }
-
-  const tbody = document.querySelector('#storesTable tbody');
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;">Cargando tiendas...</td></tr>';
+async function requestCode() {
+  const email = document.getElementById('adminEmail').value.trim();
+  if (!email) return alert("Ingresa tu correo de administrador");
 
   try {
     const res = await fetch(WEB_APP_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'admin.stores.list',
-        token: currentToken
-      })
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ action: 'admin.request.code', email: email })
     });
-
     const data = await res.json();
 
-    if (!data.ok) throw new Error(data.error || 'Error desconocido');
+    if (data.ok) {
+      alert(`Código enviado a: ${email}\n\nRevisa tu correo (puede llegar a spam)`);
+      document.getElementById('codeSection').classList.remove('hidden');
+      currentAdminEmail = email;
+    } else {
+      alert("Error: " + (data.error || "No se pudo enviar el código"));
+    }
+  } catch(e) {
+    alert("Error de conexión");
+  }
+}
 
-    renderTable(data.stores);
+async function verifyCode() {
+  const code = document.getElementById('adminCode').value.trim().toUpperCase();
+  if (code.length < 8) return alert("Ingresa el código completo");
 
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ 
+        action: 'admin.verify.code', 
+        email: currentAdminEmail, 
+        code: code 
+      })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      currentToken = data.token;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainScreen').classList.remove('hidden');
+      document.getElementById('adminInfo').textContent = `Conectado como: ${currentAdminEmail}`;
+      loadStores();
+    } else {
+      alert("Código incorrecto o expirado");
+    }
+  } catch(e) {
+    alert("Error de conexión");
+  }
+}
+
+function backToLogin() {
+  document.getElementById('codeSection').classList.add('hidden');
+}
+
+async function loadStores() {
+  if (!currentToken) return;
+
+  const tbody = document.querySelector('#storesTable tbody');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px;">Cargando tiendas...</td></tr>';
+
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ action: 'admin.stores.list', token: currentToken })
+    });
+    const data = await res.json();
+
+    if (!data.ok) throw new Error(data.error);
+
+    renderTable(data.stores || []);
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="6" style="color:red;text-align:center;padding:20px;">Error: ${err.message}</td></tr>`;
+    alert("Error al cargar tiendas: " + err.message);
   }
 }
 
@@ -193,36 +210,33 @@ function renderTable(stores) {
   const tbody = document.querySelector('#storesTable tbody');
   tbody.innerHTML = '';
 
-  stores.forEach(store => {
-    const config = store.config || {};
-    const expiryDate = store.licenseExpiry ? new Date(store.licenseExpiry) : null;
-    const isExpired = expiryDate && expiryDate < new Date();
+  stores.forEach(s => {
+    const expiry = s.licenseExpiry ? new Date(s.licenseExpiry) : null;
+    const expired = expiry && expiry < new Date();
 
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td><strong>${store.name}</strong><br><small>${store.slug}</small></td>
-      <td>${store.ownerEmail}</td>
-      <td><strong>${store.plan.toUpperCase()}</strong></td>
-      <td>${expiryDate ? expiryDate.toLocaleDateString('es-MX') : 'Sin fecha'} 
-          ${isExpired ? '<br><span style="color:#ef4444">¡Expirada!</span>' : ''}</td>
-      <td><span class="${store.status === 'active' ? 'status-active' : 'status-suspended'}">
-        ${store.status === 'active' ? 'Activa' : 'Suspendida'}
+      <td><b>${s.name}</b><br><small>${s.slug || ''}</small></td>
+      <td>${s.ownerEmail}</td>
+      <td><b>${s.plan ? s.plan.toUpperCase() : '—'}</b></td>
+      <td>${expiry ? expiry.toLocaleDateString('es-MX') : '—'}
+          ${expired ? '<br><span style="color:#ef4444">Expirada</span>' : ''}</td>
+      <td><span class="${s.status === 'active' ? 'status-active' : 'status-suspended'}">
+        ${s.status === 'active' ? 'Activa' : 'Suspendida'}
       </span></td>
       <td>
-        <button onclick="openEditModal('${store.storeId}', '${store.plan}', '${store.licenseExpiry ? store.licenseExpiry.split('T')[0] : ''}')" 
-                style="background:#6366f1; padding:8px 12px; font-size:13px;">
-          Editar Licencia
-        </button>
+        <button onclick="openEditModal('${s.storeId}', '${s.plan || 'light'}', '${expiry ? expiry.toISOString().split('T')[0] : ''}')" 
+                style="padding:8px 14px; font-size:13px;">Editar</button>
       </td>
     `;
     tbody.appendChild(row);
   });
 }
 
-function openEditModal(storeId, currentPlan, currentExpiry) {
+function openEditModal(storeId, plan, expiry) {
   document.getElementById('editStoreId').value = storeId;
-  document.getElementById('editPlan').value = currentPlan || 'light';
-  document.getElementById('editExpiry').value = currentExpiry || '';
+  document.getElementById('editPlan').value = plan;
+  document.getElementById('editExpiry').value = expiry;
   document.getElementById('editModal').style.display = 'flex';
 }
 
@@ -233,64 +247,54 @@ function closeModal() {
 async function saveLicense() {
   const storeId = document.getElementById('editStoreId').value;
   const plan = document.getElementById('editPlan').value;
-  const expiryDate = document.getElementById('editExpiry').value;
+  let expiry = document.getElementById('editExpiry').value;
 
-  if (!expiryDate) {
-    alert("Por favor selecciona una fecha de expiración");
-    return;
-  }
+  if (!expiry) return alert("Selecciona una fecha de expiración");
+
+  expiry += 'T23:59:59.999Z';   // final del día
 
   try {
     const res = await fetch(WEB_APP_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         action: 'admin.license.set',
         token: currentToken,
         storeId: storeId,
         plan: plan,
-        expiryDate: expiryDate + 'T23:59:59.999Z'   // final del día
+        expiryDate: expiry
       })
     });
 
     const data = await res.json();
-
     if (data.ok) {
-      alert('Licencia actualizada correctamente');
+      alert("Licencia actualizada correctamente");
       closeModal();
-      loadStores();        // recargar lista
+      loadStores();
     } else {
-      alert('Error: ' + (data.error || 'Desconocido'));
+      alert("Error: " + (data.error || "Desconocido"));
     }
-  } catch (err) {
-    alert('Error de conexión: ' + err.message);
+  } catch(e) {
+    alert("Error de conexión");
   }
 }
 
 function filterTable() {
-  const search = document.getElementById('search').value.toLowerCase();
-  const planFilter = document.getElementById('planFilter').value;
+  const term = document.getElementById('search').value.toLowerCase();
   const rows = document.querySelectorAll('#storesTable tbody tr');
-
   rows.forEach(row => {
-    const text = row.textContent.toLowerCase();
-    const planCell = row.cells[2].textContent.toLowerCase();
-
-    const matchSearch = text.includes(search);
-    const matchPlan = !planFilter || planCell.includes(planFilter);
-
-    row.style.display = (matchSearch && matchPlan) ? '' : 'none';
+    row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
   });
 }
 
-// ==================== PON AQUÍ TU TOKEN DE ADMIN ====================
-// Puedes ponerlo directamente aquí (temporal) o crear un pequeño login
-currentToken = prompt("Ingresa tu Token de Administrador:", "") || currentToken;
+function logout() {
+  if (confirm("¿Cerrar sesión?")) {
+    location.reload();
+  }
+}
 
-// Cargar lista automáticamente al abrir
-window.onload = () => {
-  if (currentToken) loadStores();
-};
+// Cambia esta URL por la de tu Web App
+// const WEB_APP_URL = "https://script.google.com/macros/s/AKfyc.../exec";
 </script>
 
 </body>
