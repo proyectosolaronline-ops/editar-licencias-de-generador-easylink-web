@@ -9,7 +9,7 @@
     .container { max-width: 1100px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
     header { background: #6366f1; color: white; padding: 20px; text-align: center; }
     h1 { margin: 0; font-size: 24px; }
-    .card { padding: 30px; text-align: center; }
+    .card { padding: 40px 20px; text-align: center; }
     input, select, button {
       padding: 12px 16px;
       margin: 8px;
@@ -23,18 +23,17 @@
       border: none;
       cursor: pointer;
       font-weight: 600;
-      padding: 12px 24px;
     }
     button:hover { background: #4f46e5; }
     .hidden { display: none; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    th { background: #f8fafc; }
+    th { background: #f8fafc; font-weight: 600; }
     .status-active { color: #16a34a; font-weight: bold; }
     .status-suspended { color: #ef4444; font-weight: bold; }
     .modal {
-      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7); align-items: center; justify-content: center;
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      align-items: center; justify-content: center;
     }
     .modal-content {
       background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 420px;
@@ -43,34 +42,36 @@
 </head>
 <body>
 
-<div class="container" id="mainContainer">
+<div class="container">
 
-  <!-- Pantalla de Login -->
+  <!-- Login Screen -->
   <div id="loginScreen" class="card">
-    <h1>🔑 Acceso Panel Maestro</h1>
-    <p>Editor de Licencias - LandingKit</p>
+    <h1>🔑 Editor de Licencias</h1>
+    <p>LandingKit - Panel Maestro</p>
     
-    <input type="email" id="adminEmail" placeholder="Correo del administrador" style="width:80%; max-width:320px;">
-    <br>
-    <button onclick="requestCode()">Enviar Código por Correo</button>
+    <input type="email" id="adminEmail" placeholder="Tu correo de administrador" style="width:85%; max-width:320px;" value="proyectosolaronline@gmail.com">
+    <br><br>
+    <button onclick="requestCode()" style="padding:12px 30px;">Enviar Código por Correo</button>
     
-    <div id="codeSection" class="hidden" style="margin-top:20px;">
-      <input type="text" id="adminCode" placeholder="Código de 8 caracteres" maxlength="8" style="width:200px; text-align:center; font-size:18px; letter-spacing:4px;">
-      <br>
-      <button onclick="verifyCode()">Verificar Código</button>
-      <button onclick="backToLogin()" style="background:#64748b;">Cancelar</button>
+    <div id="codeSection" class="hidden" style="margin-top:25px;">
+      <input type="text" id="adminCode" placeholder="Código de 8 caracteres" maxlength="8" 
+             style="width:220px; text-align:center; font-size:20px; letter-spacing:6px;">
+      <br><br>
+      <button onclick="verifyCode()" style="padding:12px 30px;">Verificar Código</button>
+      <button onclick="backToLogin()" style="background:#64748b; padding:12px 20px;">Cancelar</button>
     </div>
   </div>
 
-  <!-- Pantalla Principal (Tabla de Licencias) -->
+  <!-- Main Screen -->
   <div id="mainScreen" class="hidden">
     <header>
-      <h1>Editor de Licencias</h1>
-      <p id="adminInfo"></p>
+      <h1>Editor de Licencias - LandingKit</h1>
+      <p id="adminInfo" style="margin:5px 0 0 0; opacity:0.9;"></p>
     </header>
 
-    <div style="padding:20px; background:#f1f5f9; display:flex; gap:10px; flex-wrap:wrap;">
-      <input type="text" id="search" placeholder="Buscar tienda o email..." onkeyup="filterTable()" style="flex:1; min-width:200px;">
+    <div style="padding:15px 20px; background:#f1f5f9; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <input type="text" id="search" placeholder="Buscar por nombre o email..." onkeyup="filterTable()" 
+             style="flex:1; min-width:250px;">
       <button onclick="loadStores()">Actualizar Lista</button>
       <button onclick="logout()" style="background:#ef4444;">Cerrar Sesión</button>
     </div>
@@ -83,7 +84,7 @@
           <th>Plan</th>
           <th>Expira</th>
           <th>Estado</th>
-          <th>Acciones</th>
+          <th>Acción</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -91,14 +92,14 @@
   </div>
 </div>
 
-<!-- Modal Editar Licencia -->
+<!-- Modal Editar -->
 <div class="modal" id="editModal">
   <div class="modal-content">
     <h2>Editar Licencia</h2>
     <input type="hidden" id="editStoreId">
 
-    <div style="margin:15px 0;">
-      <label>Plan:</label>
+    <div class="form-group">
+      <label><strong>Plan:</strong></label>
       <select id="editPlan" style="width:100%;">
         <option value="free">Free (Trial)</option>
         <option value="light">Light</option>
@@ -107,64 +108,63 @@
       </select>
     </div>
 
-    <div style="margin:15px 0;">
-      <label>Fecha de Expiración:</label>
+    <div class="form-group">
+      <label><strong>Fecha de Expiración:</strong></label>
       <input type="date" id="editExpiry" style="width:100%;">
     </div>
 
-    <div style="display:flex; gap:10px; margin-top:25px;">
-      <button onclick="saveLicense()" style="flex:1; background:#16a34a;">Guardar Cambios</button>
-      <button onclick="closeModal()" style="flex:1; background:#64748b;">Cancelar</button>
+    <div style="margin-top:25px; display:flex; gap:10px;">
+      <button onclick="saveLicense()" style="flex:1; background:#16a34a; padding:14px;">Guardar Cambios</button>
+      <button onclick="closeModal()" style="flex:1; background:#64748b; padding:14px;">Cancelar</button>
     </div>
   </div>
 </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxrdW7sLSiJNq_XF_xDjDgBl2rJppwwoRsEe-mNE8G-2BWOcI7DpyJpQYsyN8M-x-I/exec"; 
-// ← Cambia esto por la URL real de tu Web App
+// ==================== TU URL YA INTEGRADA ====================
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxrdW7sLSiJNq_XF_xDjDgBl2rJppwwoRsEe-mNE8G-2BWOcI7DpyJpQYsyN8M-x-I/exec";
 
 let currentToken = null;
 let currentAdminEmail = '';
 
+async function postData(payload) {
+  const res = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  return await res.json();
+}
+
+// ==================== LOGIN ====================
 async function requestCode() {
   const email = document.getElementById('adminEmail').value.trim();
-  if (!email) return alert("Ingresa tu correo de administrador");
+  if (!email) return alert("Ingresa tu correo");
 
   try {
-    const res = await fetch(WEB_APP_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action: 'admin.request.code', email: email })
-    });
-    const data = await res.json();
-
+    const data = await postData({ action: 'admin.request.code', email: email });
     if (data.ok) {
-      alert(`Código enviado a: ${email}\n\nRevisa tu correo (puede llegar a spam)`);
+      alert(`✅ Código enviado a: ${email}\n\nRevisa tu correo (revisa también spam)`);
       document.getElementById('codeSection').classList.remove('hidden');
       currentAdminEmail = email;
     } else {
       alert("Error: " + (data.error || "No se pudo enviar el código"));
     }
   } catch(e) {
-    alert("Error de conexión");
+    alert("Error de conexión. Verifica que la Web App esté desplegada correctamente.");
   }
 }
 
 async function verifyCode() {
   const code = document.getElementById('adminCode').value.trim().toUpperCase();
-  if (code.length < 8) return alert("Ingresa el código completo");
+  if (code.length < 8) return alert("Ingresa el código de 8 caracteres");
 
   try {
-    const res = await fetch(WEB_APP_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ 
-        action: 'admin.verify.code', 
-        email: currentAdminEmail, 
-        code: code 
-      })
+    const data = await postData({ 
+      action: 'admin.verify.code', 
+      email: currentAdminEmail, 
+      code: code 
     });
-    const data = await res.json();
 
     if (data.ok) {
       currentToken = data.token;
@@ -184,22 +184,16 @@ function backToLogin() {
   document.getElementById('codeSection').classList.add('hidden');
 }
 
+// ==================== TABLA DE TIENDAS ====================
 async function loadStores() {
   if (!currentToken) return;
 
   const tbody = document.querySelector('#storesTable tbody');
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px;">Cargando tiendas...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:60px;color:#666;">Cargando tiendas...</td></tr>';
 
   try {
-    const res = await fetch(WEB_APP_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action: 'admin.stores.list', token: currentToken })
-    });
-    const data = await res.json();
-
-    if (!data.ok) throw new Error(data.error);
-
+    const data = await postData({ action: 'admin.stores.list', token: currentToken });
+    if (!data.ok) throw new Error(data.error || "Error desconocido");
     renderTable(data.stores || []);
   } catch (err) {
     alert("Error al cargar tiendas: " + err.message);
@@ -210,23 +204,23 @@ function renderTable(stores) {
   const tbody = document.querySelector('#storesTable tbody');
   tbody.innerHTML = '';
 
-  stores.forEach(s => {
-    const expiry = s.licenseExpiry ? new Date(s.licenseExpiry) : null;
-    const expired = expiry && expiry < new Date();
+  stores.forEach(store => {
+    const expiry = store.licenseExpiry ? new Date(store.licenseExpiry) : null;
+    const isExpired = expiry && expiry < new Date();
 
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td><b>${s.name}</b><br><small>${s.slug || ''}</small></td>
-      <td>${s.ownerEmail}</td>
-      <td><b>${s.plan ? s.plan.toUpperCase() : '—'}</b></td>
-      <td>${expiry ? expiry.toLocaleDateString('es-MX') : '—'}
-          ${expired ? '<br><span style="color:#ef4444">Expirada</span>' : ''}</td>
-      <td><span class="${s.status === 'active' ? 'status-active' : 'status-suspended'}">
-        ${s.status === 'active' ? 'Activa' : 'Suspendida'}
+      <td><strong>${store.name}</strong><br><small>${store.slug || ''}</small></td>
+      <td>${store.ownerEmail}</td>
+      <td><strong>${(store.plan || 'light').toUpperCase()}</strong></td>
+      <td>${expiry ? expiry.toLocaleDateString('es-MX') : '—'} 
+          ${isExpired ? '<br><span style="color:#ef4444">Expirada</span>' : ''}</td>
+      <td><span class="${store.status === 'active' ? 'status-active' : 'status-suspended'}">
+        ${store.status === 'active' ? 'Activa' : 'Suspendida'}
       </span></td>
       <td>
-        <button onclick="openEditModal('${s.storeId}', '${s.plan || 'light'}', '${expiry ? expiry.toISOString().split('T')[0] : ''}')" 
-                style="padding:8px 14px; font-size:13px;">Editar</button>
+        <button onclick="openEditModal('${store.storeId}', '${store.plan || "light"}', '${expiry ? expiry.toISOString().split("T")[0] : ""}')" 
+                style="padding:8px 16px;">Editar Licencia</button>
       </td>
     `;
     tbody.appendChild(row);
@@ -251,51 +245,44 @@ async function saveLicense() {
 
   if (!expiry) return alert("Selecciona una fecha de expiración");
 
-  expiry += 'T23:59:59.999Z';   // final del día
+  expiry += 'T23:59:59.999Z';
 
   try {
-    const res = await fetch(WEB_APP_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        action: 'admin.license.set',
-        token: currentToken,
-        storeId: storeId,
-        plan: plan,
-        expiryDate: expiry
-      })
+    const data = await postData({
+      action: 'admin.license.set',
+      token: currentToken,
+      storeId: storeId,
+      plan: plan,
+      expiryDate: expiry
     });
 
-    const data = await res.json();
     if (data.ok) {
-      alert("Licencia actualizada correctamente");
+      alert("✅ Licencia actualizada correctamente");
       closeModal();
       loadStores();
     } else {
       alert("Error: " + (data.error || "Desconocido"));
     }
   } catch(e) {
-    alert("Error de conexión");
+    alert("Error de conexión al guardar");
   }
 }
 
 function filterTable() {
   const term = document.getElementById('search').value.toLowerCase();
-  const rows = document.querySelectorAll('#storesTable tbody tr');
-  rows.forEach(row => {
+  document.querySelectorAll('#storesTable tbody tr').forEach(row => {
     row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
   });
 }
 
 function logout() {
-  if (confirm("¿Cerrar sesión?")) {
-    location.reload();
-  }
+  if (confirm("¿Cerrar sesión?")) location.reload();
 }
 
-// Cambia esta URL por la de tu Web App
-// const WEB_APP_URL = "https://script.google.com/macros/s/AKfyc.../exec";
+// Iniciar
+window.onload = () => {
+  // Puedes cambiar el email por defecto si quieres
+};
 </script>
-
 </body>
 </html>
