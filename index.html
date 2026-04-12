@@ -258,15 +258,12 @@ async function verificarCodigo() {
   }
 }
 
-// ── CARGAR PLANES ─────────────────────────────────────────
-async function cargarPlanes() {
+// ── CARGAR PLANES ─────────────────────────────────────────async function cargarPlanes() {
   const tbody = document.getElementById("tabla-body");
   tbody.innerHTML = `<tr><td colspan="18" style="padding:30px;color:#666;text-align:center">⏳ Cargando desde Google Sheet...</td></tr>`;
 
-  // Asegurar que la hoja existe
+  await new Promise(res => setTimeout(res, 2000));
   await post({ action: "admin.config.planes", token: tokenActual });
-
-  // Leer planes reales desde el backend
   const r = await post({ action: "admin.config_planes.get", token: tokenActual });
 
   let planes;
